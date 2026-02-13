@@ -3,6 +3,7 @@ import { createdAt, id, updatedAt } from "../schemaHelpers";
 import { relations } from "drizzle-orm";
 import { JobInfoTable } from "./jobinfo";
 
+// enum is used to restrict the experience level to only 3 values and also create a new enum type in postgres database for experience level column in job info table
 export const questionDifficulties = ["easy", "medium", "hard"] as const;
 export type QuestionDifficulty = (typeof questionDifficulties)[number];
 export const questionDifficultyEnum = pgEnum(
@@ -18,13 +19,12 @@ export const QuestionTable = pgTable("questions", {
   text: varchar().notNull(),
   difficulty: questionDifficultyEnum().notNull(),
   createdAt,
-  feedback: varchar(),
   updatedAt,
 });
 
-export const questionRelations = relations(QuestionTable, ( {one,many} )=>({
-    jobInfoId: one(JobInfoTable, {
-        fields: [QuestionTable.jobInfoId],
-        references: [JobInfoTable.id]
-    })
-}))
+export const questionRelations = relations(QuestionTable, ({ one, many }) => ({
+  jobInfoId: one(JobInfoTable, {
+    fields: [QuestionTable.jobInfoId],
+    references: [JobInfoTable.id],
+  }),
+}));

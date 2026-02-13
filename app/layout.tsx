@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
-import CustomClerkProvider  from "@/services/clerk/components/component"; 
+import CustomClerkProvider from "@/services/clerk/components/component";
 import { ThemeProvider } from "next-themes";
 
 // outfit sans font
@@ -9,8 +9,6 @@ const outfitSans = Outfit({
   variable: "--font-outfit-sans",
   subsets: ["latin"],
 });
-
-
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -23,12 +21,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // wrapping app with custom clerk provider
     <CustomClerkProvider>
+      {/* suppressing hydration warning for theme provider as it uses local storage to store theme preference and that is not available during server side rendering */}
       <html lang="en" suppressHydrationWarning>
         <body
           className={`${outfitSans.variable} ${outfitSans.variable} antialiased font-sans`}
         >
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem enableColorScheme disableTransitionOnChange>
+          {/* making application light/dark mode compatible */}
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            enableColorScheme
+            disableTransitionOnChange // to prevent transition effect when changing theme
+          >
             {children}
           </ThemeProvider>
         </body>

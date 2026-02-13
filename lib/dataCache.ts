@@ -1,5 +1,7 @@
 type CacheTag = "users" | "jobInfo" | "questions" | "interview";
 
+// This file contains helper functions to generate cache tags for different entities in the application.
+
 export function getGlobalTag(tag:string){
     return `global:${tag}` as const;
 }

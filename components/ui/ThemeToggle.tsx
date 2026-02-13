@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Laptop, Moon, Sun, Check } from "lucide-react"
+// using next theme for toggling between light and dark mode and system theme 
 import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
