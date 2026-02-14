@@ -17,11 +17,13 @@ export function OnboardingClient({userId}: OnboardingClientProps){
 
     const router = useRouter()
 
-    // fast poling database, optimised with client level caching
+    //  poling database, optimised with client level caching
     useEffect(()=>{
+
         const intervalId = setInterval(async()=>{
+
             const user = await getUser(userId)
-            if (user==null) {
+            if (user==null) { // user not found (user==null || undefined) in database, keep polling 
                 console.log("User not found in database.")
                 return
             }
@@ -29,7 +31,7 @@ export function OnboardingClient({userId}: OnboardingClientProps){
             router.replace('/app') 
             clearInterval(intervalId) // clear the interval when user is found in database
 
-        }, 250)
+        }, 2000)
 
         return () => clearInterval(intervalId) // cleanup function to clear interval on component unmount
 
