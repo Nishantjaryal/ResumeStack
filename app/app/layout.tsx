@@ -16,7 +16,7 @@ export default async function AppLayout({children}: LayoutProps) {
     return <>
 
         <Navbar />
-        {children}
+        <main className="site-content p-4 sm:px-8">{children}</main>
 
     </>
 }
