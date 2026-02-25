@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/services/clerk/getCurrentUser";
 import { redirect } from "next/navigation";
 import { Navbar } from "./_navbar";
+import { Toaster } from "@/components/ui/sonner"
 
 
 interface LayoutProps {
@@ -17,6 +18,7 @@ export default async function AppLayout({children}: LayoutProps) {
 
         <Navbar />
         <main className="site-content p-4 sm:px-8">{children}</main>
+        <Toaster />
 
     </>
 }

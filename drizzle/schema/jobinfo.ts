@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, uuid, varchar } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, varchar } from "drizzle-orm/pg-core";
 import { createdAt, id, updatedAt } from "../schemaHelpers";
 import { UsersTable } from "../schema";
 import { relations } from "drizzle-orm";
@@ -15,7 +15,7 @@ export const experienceLevelEnum = pgEnum(
 
 export const JobInfoTable = pgTable("job_info", {
   id,
-  jobTitle: uuid(),
+  jobTitle: varchar(),
   name: varchar().notNull(),
   experiencelevel: experienceLevelEnum().notNull(),
   description: varchar().notNull(),
