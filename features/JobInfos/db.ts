@@ -22,7 +22,9 @@ export async function UpdateJobInfo({id, jobinfo}: {id: string, jobinfo: Partial
         userId: JobInfoTable.userId,
     }) // Return the inserted record with the generated ID
 
-    reValidateJobInfoCache(UpdateJobInfo)
+    if (UpdateJobInfo) {
+        reValidateJobInfoCache(UpdateJobInfo)
+    }
 
     return UpdateJobInfo
 }

@@ -6,7 +6,13 @@ import { ClerkProvider as OriginalClerkProvider } from '@clerk/nextjs'
 
 const CustomClerkProvider  = ({children}: {children: ReactNode}) => {
   return (
-    <OriginalClerkProvider>
+    <OriginalClerkProvider
+    appearance={
+      {
+        cssLayerName:"vendor"
+      }
+    }
+    >
       {children}
     </OriginalClerkProvider>
   )

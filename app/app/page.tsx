@@ -48,8 +48,12 @@ async function JobInfo() {
       </div>
       <div className="w-full grid grid-cols-1 max-[500px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-6">
         {jobInfos.map((jobInfo) => (
-          <div className="h-[150px] p-2 sm:h-[200px] rounded-lg bg-primary/10">
-            <div className="h-[150px] p-2  rounded-lg bg-orange-500/20">
+          <Link
+            href={`/app/job-info/${jobInfo.id}`}
+            key={jobInfo.id}
+          >
+          <div className="h-[150px] p-2 sm:h-[200px] rounded-lg bg-primary/10 border shadow border-black/10">
+            <div className="h-[150px] p-2  rounded-lg bg-orange-500/60 border shadow border-black/10">
               <h1 className="text-lg text-white font-bold">
                 {jobInfo.jobTitle}
               </h1>
@@ -60,6 +64,7 @@ async function JobInfo() {
               {jobInfo.name} - {jobInfo.jobTitle} - {jobInfo.experiencelevel}
             </p>
           </div>
+          </Link>
         ))}
       </div>
     </div>

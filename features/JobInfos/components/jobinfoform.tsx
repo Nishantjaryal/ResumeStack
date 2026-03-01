@@ -27,6 +27,7 @@ import { experienceLevels } from "@/drizzle/schema/jobinfo";
 import { jobInfoFormSchema } from "../schema";
 import { Loader2Icon } from "lucide-react";
 import { createJobinfo, updateJobinfo } from "../service/actions";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 export type JobInfoFormValues = z.infer<typeof jobInfoFormSchema>;
 
@@ -39,7 +40,7 @@ const Jobinfoform = ({ jobinfo }: JobInfoFormProps) => {
     resolver: zodResolver(jobInfoFormSchema),
     defaultValues: {
       name: jobinfo?.name ?? "",
-      title: jobinfo?.title ?? "",
+      title: jobinfo?.title ?? null,
       experienceLevel: jobinfo?.experienceLevel ?? "junior",
       description: jobinfo?.description ?? "",
     },
@@ -53,8 +54,12 @@ const Jobinfoform = ({ jobinfo }: JobInfoFormProps) => {
       : createJobinfo;
 
     try {
-      const res = await action(_values);
+      await action(_values);
     } catch (error) {
+      if (isRedirectError(error)) {
+        throw error;
+      }
+
       toast.error("Failed to fetch Info");
     }
   };
@@ -62,7 +67,7 @@ const Jobinfoform = ({ jobinfo }: JobInfoFormProps) => {
   return (
     <div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 ">
           <FormField
             control={form.control}
             name="name"
@@ -157,7 +162,7 @@ const Jobinfoform = ({ jobinfo }: JobInfoFormProps) => {
             {form.formState.isSubmitting ? (
               <Loader2Icon className="animate-spin" />
             ) : (
-              "Create"
+              "Save Job"
             )}
           </Button>
         </form>
