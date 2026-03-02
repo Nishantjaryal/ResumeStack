@@ -23,6 +23,26 @@ const App = () => {
   );
 };
 
+function truncateWords(str:string, numWords:number) {
+  // Split the string into an array of words using space as a delimiter.
+  // Using a regular expression (/\s+/) handles multiple consecutive spaces gracefully.
+  const words:Array<string> = str.trim().split(/\s+/);
+  
+  // If the string has fewer words than the limit, return the original string.
+  if (words.length <= numWords) {
+    return str;
+  }
+  
+  // Use slice() to get the first 'numWords' elements of the array.
+  const truncatedWords = words.slice(0, numWords);
+  
+  // Join the selected words back into a single string with spaces.
+  const truncatedString = truncatedWords.join(' ');
+  
+  // Optionally, add an ellipsis (...) to the end.
+  return truncatedString + '...';
+}
+
 async function JobInfo() {
   const { userId, redirectToSignIn } = await getCurrentUser();
 
@@ -52,12 +72,12 @@ async function JobInfo() {
             href={`/app/job-info/${jobInfo.id}`}
             key={jobInfo.id}
           >
-          <div className="h-[150px] p-2 sm:h-[200px] rounded-lg bg-primary/10 border shadow border-black/10">
-            <div className="h-[150px] p-2  rounded-lg bg-orange-500/60 border shadow border-black/10">
+          <div className="h-[150px] p-2 sm:h-[200px] rounded-lg bg-primary/10 border shadow border-black/10 dark:border-white/30">
+            <div className="h-[150px] p-2  rounded-lg bg-primary border shadow border-black/10">
               <h1 className="text-lg text-white font-bold">
                 {jobInfo.jobTitle}
               </h1>
-              <h3 className="text-white text-sm">{jobInfo.description}</h3>
+              <h3 className="text-white text-sm">{truncateWords(jobInfo.description, 12)}</h3>
               <h3 className="text-white text-sm">{jobInfo.experiencelevel}</h3>
             </div>
             <p className=" text-xs mt-2">
