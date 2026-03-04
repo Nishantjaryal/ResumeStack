@@ -1,4 +1,4 @@
-import { InterviewTable, JobInfoTable } from "@/drizzle/schema";
+import { InterviewTable } from "@/drizzle/schema";
 import { db } from "@/drizzle/db";
 import { reValidateInterviewCache } from "./dbcache";
 import { eq } from "drizzle-orm";

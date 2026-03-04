@@ -7,10 +7,8 @@ import { db } from "@/drizzle/db";
 import { and, eq } from "drizzle-orm";
 import { JobInfoTable } from "@/drizzle/schema/jobinfo";
 import { insertInterview, updateInterviewDB } from "./db";
-import { getInterviewIdTag, getInterviewsGlobalTag } from "./dbcache";
-import { duration } from "drizzle-orm/gel-core";
+import { getInterviewIdTag } from "./dbcache";
 import { InterviewTable } from "@/drizzle/schema";
-import { use } from "react";
 
 export async function CreateInterview({
   jobInfoId,

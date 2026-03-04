@@ -6,7 +6,7 @@ import Jobinfoform from "@/features/JobInfos/components/jobinfoform";
 import { getJobInfosUserTag } from "@/features/JobInfos/dbCache";
 import { getCurrentUser } from "@/services/clerk/getCurrentUser";
 import { desc, eq } from "drizzle-orm";
-import { Loader2Icon, RefreshCcwIcon } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 import { cacheTag } from "next/cache";
 import Link from "next/link";
 import { Suspense } from "react";
