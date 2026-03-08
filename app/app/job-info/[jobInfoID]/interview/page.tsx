@@ -1,4 +1,6 @@
 import BackLink from "@/components/BackLink";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/drizzle/db";
 import { InterviewTable } from "@/drizzle/schema";
 import {  getInterviewsUserTag } from "@/features/interviews/dbcache";
@@ -6,7 +8,7 @@ import { getJobInfoIdTag } from "@/features/JobInfos/dbCache";
 import { getCurrentUser } from "@/services/clerk/getCurrentUser";
 import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { cacheTag } from "next/cache";
-import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Suspense } from "react";
 
 
@@ -43,21 +45,42 @@ async function Suspendeddata({ jobinfoID }: { jobinfoID: string }) {
 
   const InterViewInfo = await getInterviewInfo(jobinfoID, userId);
 
-  if (!InterViewInfo || InterViewInfo.length === 0) {
-    redirect(`/app/job-info/${jobinfoID}/interview/new`)
-  }
-
   return (
-    <div>
-      <h1>{InterViewInfo.map(
-        (interview)=>{
-            return (
-                <div>
-                    {interview.humeChatId}
-                </div>
-            )
-        }
-      )}</h1>
+    <div className="w-full max-w-6xl space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Interviews</h1>
+        <Button asChild>
+          <Link href={`/app/job-info/${jobinfoID}/interview/new`}>New Interview</Link>
+        </Button>
+      </div>
+
+      {InterViewInfo.length === 0 ? (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            No interviews yet. Create your first interview.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {InterViewInfo.map((interview) => (
+            <Link
+              key={interview.id}
+              href={`/app/job-info/${jobinfoID}/interview/${interview.id}`}
+              className="block"
+            >
+              <Card className="h-full transition-colors hover:bg-muted/50">
+                <CardHeader>
+                  <CardTitle className="text-base">Interview</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1 text-sm text-muted-foreground">
+                  <p>Duration: {interview.duration}</p>
+                  <p>Chat ID: {interview.humeChatId ?? "N/A"}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

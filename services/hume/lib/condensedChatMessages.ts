@@ -7,12 +7,21 @@ type ChatEventMessage = {
 
 type Message = JSONMessage | ConnectionMessage | ChatEventMessage
 
+type MessageLike =
+    | Message
+    | {
+          type: string
+          messageText?: unknown
+          message?: unknown
+          content?: unknown
+      }
+
 export type CondensedChatMessage = {
     isUser: boolean
     content: string
 }
 
-export const condencedChatMessages = (messages: Message[]) => {
+export const condencedChatMessages = (messages: MessageLike[]) => {
     return messages.reduce((acc: CondensedChatMessage[], message) => {
         const data = getChatEventData(message) ?? getchatJSONMessageData(message)
         if (data == null) {
@@ -35,7 +44,7 @@ export const condencedChatMessages = (messages: Message[]) => {
     }, [])
 }
 
-function getchatJSONMessageData(message: Message): CondensedChatMessage | null {
+function getchatJSONMessageData(message: MessageLike): CondensedChatMessage | null {
     if (message.type !== "user_message" && message.type !== "assistant_message") {
         return null
     }
@@ -60,7 +69,7 @@ function getchatJSONMessageData(message: Message): CondensedChatMessage | null {
     }
 }
 
-function getChatEventData(message: Message): CondensedChatMessage | null {
+function getChatEventData(message: MessageLike): CondensedChatMessage | null {
     if (
         (message.type !== "USER_MESSAGE" && message.type !== "AGENT_MESSAGE") ||
         !("messageText" in message) ||

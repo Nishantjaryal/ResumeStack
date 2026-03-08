@@ -160,7 +160,7 @@ return () => clearInterval(intervalid)
     }
     updateInterview(interviewIdState, {duration: durationRef.current})
 
-    router.push(`/app/job-info/${jobInfo.id}/interview/${interviewIdState} `)
+    router.push(`/app/job-info/${jobInfo.id}/${interviewIdState} `)
   }, [readyState,interviewIdState, router, jobInfo.id])
 
 
