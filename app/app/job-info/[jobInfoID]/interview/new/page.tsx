@@ -8,6 +8,8 @@ import { fetchAccessToken } from "hume";
 import { env } from "@/data/env/server";
 import { VoiceProvider } from "@humeai/voice-react";
 import StartCall from "./_startCall";
+import { canCreateInterview } from "@/features/interviews/permissions";
+import { redirect } from "next/navigation";
 
 const CreateInterview = async ({
   params,
@@ -23,6 +25,10 @@ const CreateInterview = async ({
   if (!userId || !user) {
     redirectToSignIn();
     return null;
+  }
+
+  if(!await canCreateInterview()) {
+    return redirect("app/upgrade");
   }
 
   const jobInfo = await getJobInfo(jobInfoID, userId);

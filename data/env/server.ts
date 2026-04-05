@@ -11,6 +11,7 @@ export const env = createEnv({
     CLERK_SECRET_KEY: z.string().min(1),
     HUME_SECRET_KEY: z.string().min(1),
     HUME_API_KEY: z.string().min(1),
+    GEMINI_API_KEY: z.string().min(1),
   },
   createFinalSchema: env =>{ // took all env variables and convert it to a new env --> returns database url
     return z.object(env).transform(val=>{

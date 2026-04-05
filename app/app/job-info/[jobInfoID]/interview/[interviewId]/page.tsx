@@ -1,7 +1,9 @@
 import BackLink from "@/components/BackLink";
+import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/drizzle/db";
 import { InterviewTable } from "@/drizzle/schema";
+import { generateInterViewFeedback } from "@/features/interviews/action";
 import { getInterviewIdTag } from "@/features/interviews/dbcache";
 import { getJobInfoIdTag } from "@/features/JobInfos/dbCache";
 import { getCurrentUser } from "@/services/clerk/getCurrentUser";
@@ -83,7 +85,9 @@ const InterviewPage = async ({
           <CardTitle className="text-base">Feedback</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground whitespace-pre-wrap">
-          {interview.feedback?.trim() ? interview.feedback : "No feedback available yet."}
+          {interview.feedback ? interview.feedback : <ActionButton action={generateInterViewFeedback.bind(null, interview.id)} >Generate Feedback</ActionButton>}
+          {/* {`${console.log(interview.feedback)}`} */}  
+          {/* info should be displayed here after updating, can be just dev err */}
         </CardContent>
       </Card>
 

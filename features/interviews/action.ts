@@ -9,6 +9,23 @@ import { JobInfoTable } from "@/drizzle/schema/jobinfo";
 import { insertInterview, updateInterviewDB } from "./db";
 import { getInterviewIdTag } from "./dbcache";
 import { InterviewTable } from "@/drizzle/schema";
+import { canCreateInterview } from "./permissions";
+import arcjet, { request, tokenBucket } from "@arcjet/next";
+import { env } from "@/data/env/server";
+import { generateAiInterviewFeedback } from "@/services/ai/interviews";
+
+const aj = arcjet({
+  characteristics: ["userId"],
+  key : env.ARCJET_KEY,
+  rules: [
+    tokenBucket({
+      capacity: 20,
+      refillRate: 5, 
+      interval: "1d",
+      mode : "LIVE"
+    })
+  ],
+})
 
 export async function CreateInterview({
   jobInfoId,
@@ -34,7 +51,25 @@ export async function CreateInterview({
   }
 
   // check Permissions
+
+  if(!await canCreateInterview()) {
+    return {
+      error: true,
+      message: "You have reached the limit of interviews you can create. Please upgrade your plan to create more interviews.",
+    };
+  }
   // Rate Limiting
+
+  const decision = await aj.protect(await request(),{
+    userId,
+    requested: 1,
+  })
+  if(decision.isDenied()){
+    return{
+      error: true,
+      message: "Rate limit exceeded. Please try again later.",
+    }
+  }
 
   // jobInfoId validation
   const jobInfo = await getJobInfo(jobInfoId, userId);
@@ -104,6 +139,9 @@ async function getInterview(id: string, userId: string) {
         columns: {
           id: true,
           userId: true,
+          description: true,
+          experiencelevel: true,
+          jobTitle: true,
         },
       },
     },
@@ -118,4 +156,52 @@ async function getInterview(id: string, userId: string) {
 
   return result;
 
+}
+
+
+export async function generateInterViewFeedback(interviewId: string) {
+   const { userId,user } = await getCurrentUser({alldata: true});
+
+  if (!userId || !user) {
+    return {
+      error: true,
+      message: "Unauthorized: you must be signed in to update an interview",
+    };
+  }
+
+  const interview = await getInterview(interviewId, userId);
+  if (!interview) {
+    return {
+      error: true,
+      message: "Interview not found or you don't have access to it",
+    };
+  }
+
+
+  const feedback = await generateAiInterviewFeedback({
+    humeChatId: interview.humeChatId!,
+    jobInfo: interview.jobInfo,
+    userName: user.name
+  })
+
+  if(feedback == null){
+    return{
+      error: true,
+      message: "Failed to generate feedback. Please try again later.",
+    }
+  }
+
+  if (typeof feedback !== "string") {
+    return {
+      error: true,
+      message: feedback.message,
+    };
+  }
+
+  await updateInterviewDB(interviewId, { feedback });
+
+  return {
+    error: false,
+    message: "Feedback generated successfully",
+  }
 }
