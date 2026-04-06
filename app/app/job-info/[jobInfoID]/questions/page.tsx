@@ -1,7 +1,14 @@
+import { db } from "@/drizzle/db";
+import { JobInfoTable } from "@/drizzle/schema";
+import { getJobInfoIdTag } from "@/features/JobInfos/dbCache";
+import { canCreateQuestion } from "@/features/questions/permissions";
 import { getCurrentUser } from "@/services/clerk/getCurrentUser";
+import { and, eq } from "drizzle-orm";
 import { Loader2Icon } from "lucide-react";
-import { redirect } from "next/navigation";
+import { cacheTag } from "next/cache";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
+import NewQuestionClientPage from "./_NewQuestion";
 
 const QuestionsPage = async ({
   params,
@@ -33,11 +40,20 @@ async function SuspendedComponent({ jobInfoID }: { jobInfoID: string }) {
 
     if (!await canCreateQuestion()) return redirect("/app/upgrade");
 
+    const jobInfo  = await getJobInfo(jobInfoID, userId);
+    if(jobInfo == null) return notFound();
 
 
-    return (
-        <div>Null</div>
-    )
+    return <NewQuestionClientPage jobinfo={jobInfo} />
+}
+
+async function getJobInfo(id: string, userId: string) {
+  "use cache";
+  cacheTag(getJobInfoIdTag(id));
+
+  return db.query.JobInfoTable.findFirst({
+    where: and(eq(JobInfoTable.id, id), eq(JobInfoTable.userId, userId)),
+  });
 }
 
 export default QuestionsPage;
