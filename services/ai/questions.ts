@@ -3,42 +3,66 @@ import {
   QuestionDifficulty,
   QuestionTable,
 } from "@/drizzle/schema"
-import { ModelMessage, streamText } from "ai"
+import { generateText, ModelMessage, streamText } from "ai"
 import { google } from "./models/google"
+import { GroqResponse } from "@/app/api/ai/questions/groq/route"
 
-export function generateAiQuestion({
+const MAX_ATTEMPTS = 3
+const GROQ_QUESTION_MODEL = "llama-3.3-70b-versatile"
+
+type QuestionJobInfo = Pick<
+  typeof JobInfoTable.$inferSelect,
+  "jobTitle" | "description" | "experiencelevel"
+>
+
+type PreviousQuestion = Pick<typeof QuestionTable.$inferSelect, "text" | "difficulty">
+
+function getFallbackQuestion(difficulty: QuestionDifficulty) {
+  return `### ${difficulty[0].toUpperCase()}${difficulty.slice(1)} Technical Question\n\nGiven the job description and experience level, explain how you would design and implement one core feature for this role. Include:\n\n- The architecture/components you would choose\n- Key trade-offs and risks\n- How you would test and monitor it in production`
+}
+
+function isQuotaOrRateLimitError(error: unknown) {
+  if (typeof error !== "object" || error == null) return false
+
+  const maybeError = error as {
+    statusCode?: number
+    message?: string
+    lastError?: { statusCode?: number; message?: string }
+  }
+
+  const statusCode = maybeError.statusCode ?? maybeError.lastError?.statusCode
+  if (statusCode === 429) return true
+
+  const message = `${maybeError.message ?? ""} ${maybeError.lastError?.message ?? ""}`
+    .toLowerCase()
+
+  return message.includes("quota exceeded") || message.includes("resource_exhausted")
+}
+
+function getQuestionPromptConfig({
   jobInfo,
   previousQuestions,
   difficulty,
-  onFinish,
 }: {
-  jobInfo: Pick<
-    typeof JobInfoTable.$inferSelect,
-    "jobTitle" | "description" | "experiencelevel"
-  >
-  previousQuestions: Pick<
-    typeof QuestionTable.$inferSelect,
-    "text" | "difficulty"
-  >[]
+  jobInfo: QuestionJobInfo
+  previousQuestions: PreviousQuestion[]
   difficulty: QuestionDifficulty
-  onFinish: (question: string) => void
 }) {
-  const previousMessages: ModelMessage[] = previousQuestions.flatMap(q => [
+  const recentQuestions = previousQuestions.slice(0, 6).reverse()
+
+  const previousMessages: ModelMessage[] = recentQuestions.flatMap(q => [
     { role: "user" as const, content: q.difficulty },
     { role: "assistant" as const, content: q.text },
   ])
 
-  return streamText({
-    model: google("gemini-2.5-flash"),
-    onFinish: ({ text }) => onFinish(text),
+  return {
     messages: [
       ...previousMessages,
       {
         role: "user" as const,
         content: difficulty,
       },
-    ],
-    maxRetries: 10,
+    ] as ModelMessage[],
     system: `You are an AI assistant that creates technical interview questions tailored to a specific job role. Your task is to generate one **realistic and relevant** technical question that matches the skill requirements of the job and aligns with the difficulty level provided by the user.
 
 Job Information:
@@ -56,7 +80,79 @@ Guidelines:
 - It is ok to ask a question about just a single part of the job description, such as a specific technology or skill (e.g., if the job description is for a Next.js, Drizzle, and TypeScript developer, you can ask a TypeScript only question).
 - The question should be formatted as markdown.
 - Stop generating output as soon you have provided the full question.`,
+  }
+}
+
+export function generateAiQuestion({
+  jobInfo,
+  previousQuestions,
+  difficulty,
+  onFinish,
+}: {
+  jobInfo: QuestionJobInfo
+  previousQuestions: PreviousQuestion[]
+  difficulty: QuestionDifficulty
+  onFinish: (question: string) => void
+}) {
+  const promptConfig = getQuestionPromptConfig({
+    jobInfo,
+    previousQuestions,
+    difficulty,
   })
+
+  return streamText({
+    model: google("gemini-2.5-pro"),
+    onFinish: ({ text }) => onFinish(text),
+    messages: promptConfig.messages,
+    maxRetries: 4,
+    system: promptConfig.system,
+  })
+}
+
+export async function generateAiQuestionText({
+  jobInfo,
+  previousQuestions,
+  difficulty,
+}: {
+  jobInfo: QuestionJobInfo
+  previousQuestions: PreviousQuestion[]
+  difficulty: QuestionDifficulty
+}) {
+  const promptConfig = getQuestionPromptConfig({
+    jobInfo,
+    previousQuestions,
+    difficulty,
+  })
+
+  const finalUserMessage = promptConfig.messages[promptConfig.messages.length - 1]
+  const messageContent =
+    typeof finalUserMessage?.content === "string"
+      ? finalUserMessage.content
+      : JSON.stringify(finalUserMessage?.content ?? difficulty)
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    try {
+      const text = await GroqResponse({
+        modelName: GROQ_QUESTION_MODEL,
+        message: messageContent,
+        systemPrompt: promptConfig.system,
+      })
+
+      const trimmedText = text.trim()
+      if (trimmedText.length > 0) return trimmedText
+    } catch (error) {
+      // Quota/rate-limit errors can persist for minutes; fallback immediately.
+      if (isQuotaOrRateLimitError(error)) {
+        return getFallbackQuestion(difficulty)
+      }
+
+      if (attempt === MAX_ATTEMPTS - 1) {
+        return getFallbackQuestion(difficulty)
+      }
+    }
+  }
+
+  return getFallbackQuestion(difficulty)
 }
 
 export function generateAiQuestionFeedback({
@@ -69,8 +165,13 @@ export function generateAiQuestionFeedback({
   return streamText({
     model: google("gemini-2.5-flash"),
     prompt: answer,
-    maxRetries: 10,
-    system: `You are an expert technical interviewer. Your job is to evaluate the candidate's answer to a technical interview question.
+    maxRetries: 4,
+    system: getFeedbackSystemPrompt(question),
+  })
+}
+
+function getFeedbackSystemPrompt(question: string) {
+  return `You are an expert technical interviewer. Your job is to evaluate the candidate's answer to a technical interview question.
 
 The original question was:
 \`\`\`
@@ -98,6 +199,39 @@ Output Format (strictly follow this structure):
 ---
 ## Correct Answer
 <The full correct answer as markdown>
-\`\`\``,
-  })
+\`\`\``
+}
+
+export async function generateAiQuestionFeedbackText({
+  question,
+  answer,
+}: {
+  question: string
+  answer: string
+}) {
+  const fallbackFeedback = `## Feedback (Rating: N/A)\n\nDue to API rate limits, we cannot provide an automatic evaluation right now. Please review your answer manually against standard practices.\n\n---\n## Correct Answer\n\nA strong answer should directly address the core technical challenge, discuss relevant trade-offs, and outline practical implementation steps.`
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    try {
+      const { text } = await generateText({
+        model: google("gemini-2.5-flash"),
+        prompt: answer,
+        system: getFeedbackSystemPrompt(question),
+        maxRetries: 1,
+      })
+
+      const trimmedText = text.trim()
+      if (trimmedText.length > 0) return trimmedText
+    } catch (error) {
+      if (isQuotaOrRateLimitError(error)) {
+        return fallbackFeedback
+      }
+
+      if (attempt === MAX_ATTEMPTS - 1) {
+        return fallbackFeedback
+      }
+    }
+  }
+
+  return fallbackFeedback
 }

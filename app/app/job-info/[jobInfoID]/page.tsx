@@ -38,7 +38,7 @@ const JobInfoPage = async ({
     {
       title: "Technical Question",
       description: "Practice role-based technical questions tailored to this job.",
-      href: `/app/job-info/${jobInfoID}/question`,
+      href: `/app/job-info/${jobInfoID}/questions`,
     },
     {
       title: "Interview",

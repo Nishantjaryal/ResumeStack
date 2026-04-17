@@ -16,7 +16,7 @@ import {
   QuestionDifficulty,
 } from "@/drizzle/schema"
 import { formatQuestionDifficulty } from "@/features/questions/formatters"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useCompletion } from "@ai-sdk/react"
 import { toast } from "sonner"
 import BackLink from "@/components/BackLink"
@@ -30,6 +30,8 @@ export function NewQuestionClientPage({
 }) {
   const [status, setStatus] = useState<Status>("init")
   const [answer, setAnswer] = useState<string | null>(null)
+  const lastDifficultyRef = useRef<QuestionDifficulty | null>(null)
+  const emptyRetryRef = useRef(0)
 
   const {
     complete: generateQuestion,
@@ -38,10 +40,28 @@ export function NewQuestionClientPage({
     isLoading: isGeneratingQuestion,
   } = useCompletion({
     api: "/api/ai/questions/generate-question",
-    onFinish: () => {
+    onFinish: (_prompt, generatedQuestion) => {
+      if (generatedQuestion.trim().length === 0) {
+        if (emptyRetryRef.current < 1 && lastDifficultyRef.current != null) {
+          emptyRetryRef.current += 1
+          generateQuestion(lastDifficultyRef.current, {
+            body: { jobInfoId: jobInfo.id },
+          })
+          return
+        }
+
+        setStatus("init")
+        emptyRetryRef.current = 0
+        toast("Question generation returned empty output. Please try again.")
+        return
+      }
+
+      emptyRetryRef.current = 0
       setStatus("awaiting-answer")
     },
     onError: error => {
+      setStatus("init")
+      emptyRetryRef.current = 0
       toast(error.message)
     },
   })
@@ -62,10 +82,10 @@ export function NewQuestionClientPage({
   })
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full mx-w-[2000px] mx-auto grow h-screen-header">
+    <div className="flex flex-col items-center gap-4 w-full max-w-[2000px] mx-auto grow h-full">
       <div className="container flex gap-4 mt-4 items-center justify-between">
         <div className="grow basis-0">
-          <BackLink takeTo={`/app/job-infos/${jobInfo.id}`} Text="Back" />
+          <BackLink takeTo={`/app/job-info/${jobInfo.id}`} Text="Back" />
             
         </div>
         <Controls
@@ -80,9 +100,14 @@ export function NewQuestionClientPage({
           isLoading={isGeneratingFeedback || isGeneratingQuestion}
           generateFeedback={() => {
             if (answer == null || answer.trim() === "") return
-            generateFeedback(answer.trim())
+            if (question.trim().length === 0) return
+
+            generateFeedback(answer.trim(), { body: { question } })
           }}
           generateQuestion={difficulty => {
+            setStatus("init")
+            lastDifficultyRef.current = difficulty
+            emptyRetryRef.current = 0
             setQuestion("")
             setFeedback("")
             setAnswer(null)
@@ -96,6 +121,7 @@ export function NewQuestionClientPage({
         feedback={feedback}
         answer={answer}
         status={status}
+        isGeneratingQuestion={isGeneratingQuestion}
         setAnswer={setAnswer}
       />
     </div>
@@ -107,26 +133,32 @@ function QuestionContainer({
   feedback,
   answer,
   status,
+  isGeneratingQuestion,
   setAnswer,
 }: {
-  question: string | null
-  feedback: string | null
+  question: string
+  feedback: string
   answer: string | null
   status: Status
+  isGeneratingQuestion: boolean
   setAnswer: (value: string) => void
 }) {
+  const hasQuestion = question.trim().length > 0
+
   return (
     <ResizablePanelGroup orientation="horizontal" className="grow border-t">
       <ResizablePanel id="question-and-feedback" defaultSize={50} minSize={5}>
         <ResizablePanelGroup orientation="vertical" className="grow">
           <ResizablePanel id="question" defaultSize={25} minSize={5}>
             <ScrollArea className="h-full min-w-48 *:h-full">
-              {status === "init" && question == null ? (
+              {!hasQuestion ? (
                 <p className="text-base md:text-lg flex items-center justify-center h-full p-6">
-                  Get started by selecting a question difficulty above.
+                  {isGeneratingQuestion
+                    ? "Generating your question..."
+                    : "Get started by selecting a question difficulty above."}
                 </p>
               ) : (
-                question && (
+                hasQuestion && (
                   <MarkdownRenderer className="p-6">
                     {question}
                   </MarkdownRenderer>
@@ -134,7 +166,7 @@ function QuestionContainer({
               )}
             </ScrollArea>
           </ResizablePanel>
-          {feedback && (
+          {feedback.trim().length > 0 && (
             <>
               <ResizableHandle withHandle />
               <ResizablePanel id="feedback" defaultSize={75} minSize={5}>

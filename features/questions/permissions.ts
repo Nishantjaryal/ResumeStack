@@ -1,16 +1,27 @@
 import { db } from "@/drizzle/db";
 import {  JobInfoTable, QuestionTable } from "@/drizzle/schema";
 import { getCurrentUser } from "@/services/clerk/getCurrentUser";
-import { hasPermission } from "@/services/clerk/getPermissions";
+import { hasAnyPermission } from "@/services/clerk/getPermissions";
 import { count, eq } from "drizzle-orm";
 
-export async function canCreateQuestion(){
+const TECHNICAL_QUESTION_LIMIT = 20
+
+const UNLIMITED_TECHNICAL_QUESTION_FEATURES = [
+    "Unlimited_Technical_Questions",
+    "unlimited_technical_questions",
+] as const
+
+const LIMITED_TECHNICAL_QUESTION_FEATURES = [
+    "20_questions",
+] as const
+
+export async function canCreateQuestion(userId?: string){
     const res = await Promise.any([
-        hasPermission("Unlimited_Technical_Questions")
+        hasAnyPermission([...UNLIMITED_TECHNICAL_QUESTION_FEATURES])
         .then( bool => bool || Promise.reject("No permission")),
 
-        Promise.all([hasPermission("20_questions"), getUserQuestionCount()]).then(([hasPermission,c])=>{
-            if(hasPermission && c<5) return true
+        Promise.all([hasAnyPermission([...LIMITED_TECHNICAL_QUESTION_FEATURES]), getUserQuestionCount(userId)]).then(([hasPermission,c])=>{
+            if(hasPermission && c<TECHNICAL_QUESTION_LIMIT) return true
             return Promise.reject("No permission or already used")
         }),
         
@@ -18,11 +29,11 @@ export async function canCreateQuestion(){
     return res;
 }
 
-async function getUserQuestionCount(){
-    const { userId } = await getCurrentUser();
-    if(!userId) return 0;
+async function getUserQuestionCount(userId?: string){
+    const currentUserId = userId ?? (await getCurrentUser()).userId;
+    if(!currentUserId) return 0;
 
-    return getUserTechnicalQuestionCount(userId);
+    return getUserTechnicalQuestionCount(currentUserId);
 }
 
 async function getUserTechnicalQuestionCount(userId: string){

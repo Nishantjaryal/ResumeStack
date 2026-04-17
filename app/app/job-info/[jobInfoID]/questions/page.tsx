@@ -8,7 +8,7 @@ import { Loader2Icon } from "lucide-react";
 import { cacheTag } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import NewQuestionClientPage from "./_NewQuestion";
+import { NewQuestionClientPage } from "./_NewQuestion";
 
 const QuestionsPage = async ({
   params,
@@ -38,13 +38,13 @@ async function SuspendedComponent({ jobInfoID }: { jobInfoID: string }) {
       return null;
     }
 
-    if (!await canCreateQuestion()) return redirect("/app/upgrade");
+    if (!await canCreateQuestion(userId)) return redirect("/app/upgrade");
 
     const jobInfo  = await getJobInfo(jobInfoID, userId);
     if(jobInfo == null) return notFound();
 
 
-    return <NewQuestionClientPage jobinfo={jobInfo} />
+    return <NewQuestionClientPage jobInfo={jobInfo} />
 }
 
 async function getJobInfo(id: string, userId: string) {
