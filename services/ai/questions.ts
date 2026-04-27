@@ -3,8 +3,7 @@ import {
   QuestionDifficulty,
   QuestionTable,
 } from "@/drizzle/schema"
-import { generateText, ModelMessage, streamText } from "ai"
-import { google } from "./models/google"
+import {  ModelMessage } from "ai"
 import { GroqResponse } from "@/app/api/ai/questions/groq/route"
 
 const MAX_ATTEMPTS = 3
@@ -83,7 +82,7 @@ Guidelines:
   }
 }
 
-export function generateAiQuestion({
+export async function generateAiQuestion({
   jobInfo,
   previousQuestions,
   difficulty,
@@ -100,13 +99,11 @@ export function generateAiQuestion({
     difficulty,
   })
 
-  return streamText({
-    model: google("gemini-2.5-pro"),
-    onFinish: ({ text }) => onFinish(text),
-    messages: promptConfig.messages,
-    maxRetries: 4,
-    system: promptConfig.system,
-  })
+  return await GroqResponse({
+        modelName: GROQ_QUESTION_MODEL,
+        message: promptConfig.messages[promptConfig.messages.length - 1].content as string,
+        systemPrompt: promptConfig.system,
+      })
 }
 
 export async function generateAiQuestionText({
@@ -130,7 +127,6 @@ export async function generateAiQuestionText({
       ? finalUserMessage.content
       : JSON.stringify(finalUserMessage?.content ?? difficulty)
 
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     try {
       const text = await GroqResponse({
         modelName: GROQ_QUESTION_MODEL,
@@ -138,36 +134,33 @@ export async function generateAiQuestionText({
         systemPrompt: promptConfig.system,
       })
 
+
       const trimmedText = text.trim()
-      if (trimmedText.length > 0) return trimmedText
+      return trimmedText;
     } catch (error) {
       // Quota/rate-limit errors can persist for minutes; fallback immediately.
       if (isQuotaOrRateLimitError(error)) {
         return getFallbackQuestion(difficulty)
       }
 
-      if (attempt === MAX_ATTEMPTS - 1) {
-        return getFallbackQuestion(difficulty)
-      }
+    
     }
-  }
 
   return getFallbackQuestion(difficulty)
 }
 
-export function generateAiQuestionFeedback({
+export async function generateAiQuestionFeedback({
   question,
   answer,
 }: {
   question: string
   answer: string
 }) {
-  return streamText({
-    model: google("gemini-2.5-flash"),
-    prompt: answer,
-    maxRetries: 4,
-    system: getFeedbackSystemPrompt(question),
-  })
+  return await GroqResponse({
+        modelName: GROQ_QUESTION_MODEL,
+        message: answer,
+        systemPrompt: getFeedbackSystemPrompt(question),
+      })
 }
 
 function getFeedbackSystemPrompt(question: string) {
@@ -213,11 +206,10 @@ export async function generateAiQuestionFeedbackText({
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     try {
-      const { text } = await generateText({
-        model: google("gemini-2.5-flash"),
-        prompt: answer,
-        system: getFeedbackSystemPrompt(question),
-        maxRetries: 1,
+      const  text  = await GroqResponse({
+        modelName: GROQ_QUESTION_MODEL,
+        message: answer,
+        systemPrompt: getFeedbackSystemPrompt(question),
       })
 
       const trimmedText = text.trim()
