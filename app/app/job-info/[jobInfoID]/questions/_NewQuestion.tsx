@@ -41,7 +41,12 @@ export function NewQuestionClientPage({
   } = useCompletion({
     api: "/api/ai/questions/generate-question",
     onFinish: (_prompt, generatedQuestion) => {
-      if (generatedQuestion.trim().length === 0) {
+      const nextQuestion =
+        typeof generatedQuestion === "string" ? generatedQuestion : ""
+
+      setQuestion(nextQuestion)
+
+      if (nextQuestion.trim().length === 0) {
         if (emptyRetryRef.current < 1 && lastDifficultyRef.current != null) {
           emptyRetryRef.current += 1
           generateQuestion(lastDifficultyRef.current, {
@@ -73,7 +78,11 @@ export function NewQuestionClientPage({
     isLoading: isGeneratingFeedback,
   } = useCompletion({
     api: "/api/ai/questions/generate-feedback",
-    onFinish: () => {
+    onFinish: (_prompt, generatedFeedback) => {
+      const nextFeedback =
+        typeof generatedFeedback === "string" ? generatedFeedback : ""
+
+      setFeedback(nextFeedback)
       setStatus("awaiting-difficulty")
     },
     onError: error => {
