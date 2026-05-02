@@ -1,4 +1,4 @@
-import BackLink from "@/components/BackLink";
+import BackLink from "@/components/BackLink2";
 import { Card, CardContent } from "@/components/ui/card";
 import Jobinfoform from "@/features/JobInfos/components/jobinfoform";
 

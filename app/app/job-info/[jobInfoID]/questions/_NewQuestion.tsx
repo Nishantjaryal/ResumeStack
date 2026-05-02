@@ -18,7 +18,7 @@ import {
 import { formatQuestionDifficulty } from "@/features/questions/formatters"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
-import BackLink from "@/components/BackLink"
+import BackLink from "@/components/BackLink2"
 
 type Status = "awaiting-answer" | "awaiting-difficulty" | "init"
 

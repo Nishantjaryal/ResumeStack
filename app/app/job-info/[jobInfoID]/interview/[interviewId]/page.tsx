@@ -1,4 +1,4 @@
-import BackLink from "@/components/BackLink";
+import BackLink from "@/components/BackLink2";
 import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/drizzle/db";

@@ -1,4 +1,4 @@
-import { hasPermission } from "./hasPermissions"
+import { auth } from "@clerk/nextjs/server"
 
 type Permission =
   | "unlimited_resume_reviews"
@@ -12,12 +12,7 @@ type Permission =
   | "interview"
 
 
-
-
-export async function hasAnyPermission(permissions: Permission[]) {
-    for (const permission of permissions) {
-        if (await hasPermission(permission)) return true
-    }
-
-    return false
+export async function hasPermission(permission: Permission){
+    const { has } = await auth()
+    return has({ feature: permission })
 }

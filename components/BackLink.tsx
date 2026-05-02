@@ -1,26 +1,31 @@
-import Link from "next/link";
-import { Button } from "./ui/button";
-import { ArrowLeft } from "lucide-react";
+import { cn } from "@/lib/utils"
+import { Button } from "./ui/button"
+import Link from "next/link"
+import { ArrowLeftIcon } from "lucide-react"
 
-interface BackLinkProps {
-  takeTo: string;
-  Text: string;
-}
-
-const BackLink = ({ takeTo, Text }: BackLinkProps) => {
+export function BackLink({
+  href,
+  children,
+  className,
+}: {
+  href: string
+  children: React.ReactNode
+  className?: string
+}) {
   return (
     <Button
-    size={"sm"}
-      variant={"ghost"}
-      className="mt-1 mb-3 p-2 px-3 bg-black/10 text-black rounded-none border-l-2 border-primary/40"
       asChild
+      variant="ghost"
+      size="sm"
+      className={cn("-ml-3", className)}
     >
-      <div>
-        <ArrowLeft className="ml-1" />
-        <Link href={takeTo}>{`Back to ${Text}`}</Link>
-      </div>
+      <Link
+        href={href}
+        className="flex gap-2 items-center text-sm text-muted-foreground"
+      >
+        <ArrowLeftIcon />
+        {children}
+      </Link>
     </Button>
-  );
-};
-
-export default BackLink;
+  )
+}
