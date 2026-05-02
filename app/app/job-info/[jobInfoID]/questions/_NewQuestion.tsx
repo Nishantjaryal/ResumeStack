@@ -17,7 +17,6 @@ import {
 } from "@/drizzle/schema"
 import { formatQuestionDifficulty } from "@/features/questions/formatters"
 import { useRef, useState } from "react"
-import { useCompletion } from "@ai-sdk/react"
 import { toast } from "sonner"
 import BackLink from "@/components/BackLink"
 
@@ -30,28 +29,43 @@ export function NewQuestionClientPage({
 }) {
   const [status, setStatus] = useState<Status>("init")
   const [answer, setAnswer] = useState<string | null>(null)
+  const [question, setQuestion] = useState("")
+  const [feedback, setFeedback] = useState("")
+  const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false)
+  const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false)
   const lastDifficultyRef = useRef<QuestionDifficulty | null>(null)
   const emptyRetryRef = useRef(0)
 
-  const {
-    complete: generateQuestion,
-    completion: question,
-    setCompletion: setQuestion,
-    isLoading: isGeneratingQuestion,
-  } = useCompletion({
-    api: "/api/ai/questions/generate-question",
-    onFinish: (_prompt, generatedQuestion) => {
-      const nextQuestion =
-        typeof generatedQuestion === "string" ? generatedQuestion : ""
+  const readTextResponse = async (response: Response) => {
+    const contentType = response.headers.get("content-type") ?? ""
+    if (contentType.includes("application/json")) {
+      const data = (await response.json()) as { text?: string; content?: string }
+      return data.text ?? data.content ?? ""
+    }
+    return await response.text()
+  }
+
+  const requestQuestion = async (difficulty: QuestionDifficulty) => {
+    setIsGeneratingQuestion(true)
+    try {
+      const response = await fetch("/api/ai/questions/generate-question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: difficulty, jobInfoId: jobInfo.id }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to generate question")
+      }
+
+      const nextQuestion = (await readTextResponse(response)).toString()
 
       setQuestion(nextQuestion)
 
       if (nextQuestion.trim().length === 0) {
         if (emptyRetryRef.current < 1 && lastDifficultyRef.current != null) {
           emptyRetryRef.current += 1
-          generateQuestion(lastDifficultyRef.current, {
-            body: { jobInfoId: jobInfo.id },
-          })
+          await requestQuestion(lastDifficultyRef.current)
           return
         }
 
@@ -63,32 +77,39 @@ export function NewQuestionClientPage({
 
       emptyRetryRef.current = 0
       setStatus("awaiting-answer")
-    },
-    onError: error => {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error"
       setStatus("init")
       emptyRetryRef.current = 0
-      toast(error.message)
-    },
-  })
+      toast(message)
+    } finally {
+      setIsGeneratingQuestion(false)
+    }
+  }
 
-  const {
-    complete: generateFeedback,
-    completion: feedback,
-    setCompletion: setFeedback,
-    isLoading: isGeneratingFeedback,
-  } = useCompletion({
-    api: "/api/ai/questions/generate-feedback",
-    onFinish: (_prompt, generatedFeedback) => {
-      const nextFeedback =
-        typeof generatedFeedback === "string" ? generatedFeedback : ""
+  const requestFeedback = async (answerText: string, questionText: string) => {
+    setIsGeneratingFeedback(true)
+    try {
+      const response = await fetch("/api/ai/questions/generate-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: answerText, question: questionText }),
+      })
 
+      if (!response.ok) {
+        throw new Error("Failed to generate feedback")
+      }
+
+      const nextFeedback = (await readTextResponse(response)).toString()
       setFeedback(nextFeedback)
       setStatus("awaiting-difficulty")
-    },
-    onError: error => {
-      toast(error.message)
-    },
-  })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error"
+      toast(message)
+    } finally {
+      setIsGeneratingFeedback(false)
+    }
+  }
 
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-[2000px] mx-auto grow h-full">
@@ -111,7 +132,7 @@ export function NewQuestionClientPage({
             if (answer == null || answer.trim() === "") return
             if (question.trim().length === 0) return
 
-            generateFeedback(answer.trim(), { body: { question } })
+            requestFeedback(answer.trim(), question)
           }}
           generateQuestion={difficulty => {
             setStatus("init")
@@ -120,7 +141,7 @@ export function NewQuestionClientPage({
             setQuestion("")
             setFeedback("")
             setAnswer(null)
-            generateQuestion(difficulty, { body: { jobInfoId: jobInfo.id } })
+            requestQuestion(difficulty)
           }}
         />
         <div className="grow hidden md:block" />
