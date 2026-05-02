@@ -8,17 +8,17 @@ import { JobInfoBackLink } from "@/features/JobInfos/components/JobInfoBackLink"
 export default async function ResumePage({
   params,
 }: {
-  params: Promise<{ jobInfoId: string }>
+  params: Promise<{ jobInfoID: string }>
 }) {
-  const { jobInfoId } = await params
+  const { jobInfoID } = await params
 
   return (
     <div className="container py-4 space-y-4 h-screen-header flex flex-col items-start">
-      <JobInfoBackLink jobInfoId={jobInfoId} />
+      <JobInfoBackLink jobInfoId={jobInfoID} />
       <Suspense
         fallback={<Loader2Icon className="animate-spin size-24 m-auto" />}
       >
-        <SuspendedComponent jobInfoId={jobInfoId} />
+        <SuspendedComponent jobInfoId={jobInfoID} />
       </Suspense>
     </div>
   )

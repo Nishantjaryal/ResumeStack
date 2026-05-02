@@ -10,7 +10,7 @@ export async function analyzeResumeForJob({
   resumeFile: File
   jobInfo: Pick<
     typeof JobInfoTable.$inferSelect,
-    "title" | "experienceLevel" | "description"
+    "jobTitle" | "experiencelevel" | "description"
   >
 }) {
   return streamObject({
@@ -23,7 +23,7 @@ export async function analyzeResumeForJob({
           {
             type: "file",
             data: await resumeFile.arrayBuffer(),
-            mimeType: resumeFile.type,
+            mediaType: resumeFile.type,
           },
         ],
       },
@@ -36,8 +36,8 @@ Job Description:
 \`\`\`
 ${jobInfo.description}
 \`\`\`
-Experience Level: ${jobInfo.experienceLevel}
-${jobInfo.title ? `\nJob Title: ${jobInfo.title}` : ""}
+  Experience Level: ${jobInfo.experiencelevel}
+  ${jobInfo.jobTitle ? `\nJob Title: ${jobInfo.jobTitle}` : ""}
 
 Your task is to evaluate the resume against the job requirements and provide structured feedback using the following categories:
 
