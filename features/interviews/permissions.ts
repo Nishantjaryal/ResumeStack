@@ -1,7 +1,7 @@
 import { db } from "@/drizzle/db";
 import { InterviewTable, JobInfoTable } from "@/drizzle/schema";
 import { getCurrentUser } from "@/services/clerk/getCurrentUser";
-import { hasPermission } from "@/services/clerk/getPermissions";
+import { hasPermission } from "@/services/clerk/hasPermissions";
 import { and, count, eq, isNotNull } from "drizzle-orm";
 
 export async function canCreateInterview(){

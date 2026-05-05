@@ -3,7 +3,6 @@
 import { useClerk, useUser } from "@clerk/nextjs"
 import { Book, BookOpenIcon, Container, FileSliders, SpeechIcon } from "lucide-react"
 
-import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
     DropdownMenu,
@@ -79,8 +78,6 @@ export function Navbar() {
                             })}
                         </div>
                     )}
-
-                    <ThemeToggle />
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

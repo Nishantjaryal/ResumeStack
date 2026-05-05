@@ -7,10 +7,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import AppPricingTable from "@/services/clerk/components/pricingTable";
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Image from "next/image";
+import { NoiseBackground } from "@/components/ui/noise-background";
+import { NoiseBackgroundDemo } from "@/components/NoiseBgBtn";
+import WobbleCardDemo from "@/components/wobble-card-demo";
 
 const Home = () => {
   return (
@@ -24,16 +26,16 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ">
+
             <SignedOut>
               <SignInButton mode="modal">
-                <Button size="sm">Sign in</Button>
+                <Image className="rounded-full " src={"/sample.png"} width={30} height={30} alt=""></Image>
               </SignInButton>
             </SignedOut>
             <SignedIn>
-              <UserButton  />
+              <UserButton />
             </SignedIn>
-            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -56,22 +58,20 @@ const Home = () => {
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <SignedOut>
                 <SignInButton mode="modal">
-                  <Button>Start free</Button>
+                <NoiseBackgroundDemo text="Explore Free" link="/app" />
                 </SignInButton>
               </SignedOut>
               <SignedIn>
-                <Button className="border bg-blue-400 hover:bg-blue-500 text-white" asChild variant="secondary">
-                  <Link href="/app">Go to dashboard</Link>
-                </Button>
+                <NoiseBackgroundDemo text="Go to Dashboard" link="/app" />
               </SignedIn>
             </div>
           </div>
 
-          <div > <Image src={"/1.png"} alt="" width={500} height={500}  /></div>
 </div>
           <Card className="w-full">
             
             <CardContent>
+            <WobbleCardDemo/>
             </CardContent>
           </Card>
         </section>

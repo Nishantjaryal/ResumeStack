@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import CustomClerkProvider from "@/services/clerk/components/component";
-import { ThemeProvider } from "next-themes";
 
 // outfit sans font
 const outfitSans = Outfit({
@@ -23,21 +22,11 @@ export default function RootLayout({
   return (
     // wrapping app with custom clerk provider
     <CustomClerkProvider>
-      {/* suppressing hydration warning for theme provider as it uses local storage to store theme preference and that is not available during server side rendering */}
-      <html lang="en" suppressHydrationWarning>
+      <html lang="en">
         <body
           className={`${outfitSans.variable} ${outfitSans.variable} antialiased font-sans`}
         >
-          {/* making application light/dark mode compatible */}
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            enableColorScheme
-            disableTransitionOnChange // to prevent transition effect when changing theme
-          >
-            {children}
-          </ThemeProvider>
+          {children}
         </body>
       </html>
     </CustomClerkProvider>

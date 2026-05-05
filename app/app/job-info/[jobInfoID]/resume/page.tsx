@@ -3,7 +3,7 @@ import { Loader2Icon } from "lucide-react"
 import { redirect } from "next/navigation"
 import { Suspense } from "react"
 import { ResumePageClient } from "./_client"
-import { JobInfoBackLink } from "@/features/JobInfos/components/JobInfoBackLink"
+import BackLink from "@/components/BackLink2"
 
 export default async function ResumePage({
   params,
@@ -14,7 +14,7 @@ export default async function ResumePage({
 
   return (
     <div className="container py-4 space-y-4 h-screen-header flex flex-col items-start">
-      <JobInfoBackLink jobInfoId={jobInfoID} />
+      <BackLink takeTo={`/app/job-info/${jobInfoID}`} Text="Job Info" />
       <Suspense
         fallback={<Loader2Icon className="animate-spin size-24 m-auto" />}
       >

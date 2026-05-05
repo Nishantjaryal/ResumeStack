@@ -58,48 +58,90 @@ async function JobInfo() {
   }
 
   return (
-    <div className="w-full h-full">
-      <div className="w-full flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Interview Environments</h2>
+    <div className="flex h-full w-full flex-col gap-6">
+      <section className="rounded-2xl border border-border bg-card/80 p-6 shadow-sm">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Your workspace
+            </p>
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Interview Environments
+            </h2>
+            <p className="text-sm text-muted-foreground sm:text-base">
+              Keep each job organized with its own resume details, questions, and prep notes.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button asChild>
+              <Link href="/app/job-info/new">Create Job Environment</Link>
+            </Button>
 
-        <Button asChild>
-          <Link href="/app/job-info/new">Create Job Environment</Link>
-        </Button>
-      </div>
-      <div className="w-full grid grid-cols-1 max-[500px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-6">
+          </div>
+        </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="rounded-xl border border-border bg-background px-4 py-3">
+            <p className="text-xs font-medium text-muted-foreground">Active Environments</p>
+            <p className="text-xl font-semibold text-foreground">{jobInfos.length}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-background px-4 py-3">
+            <p className="text-xs font-medium text-muted-foreground">Last Updated</p>
+            <p className="text-xl font-semibold text-foreground">Recently</p>
+          </div>
+          <div className="rounded-xl border border-border bg-background px-4 py-3">
+            <p className="text-xs font-medium text-muted-foreground">Interview Flow</p>
+            <p className="text-xl font-semibold text-foreground">Structured</p>
+          </div>
+      
+        </div>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {jobInfos.map((jobInfo) => (
           <Link
             href={`/app/job-info/${jobInfo.id}`}
             key={jobInfo.id}
+            className="group"
           >
-          <div className="h-[150px] p-2 sm:h-[200px] rounded-lg bg-primary/10 border shadow border-black/10 dark:border-white/30">
-            <div className="h-[150px] p-2  rounded-lg bg-primary border shadow border-black/10">
-              <h1 className="text-lg text-white font-bold">
-                {jobInfo.jobTitle}
-              </h1>
-              <h3 className="text-white text-sm">{truncateWords(jobInfo.description, 12)}</h3>
-              <h3 className="text-white text-sm">{jobInfo.experiencelevel}</h3>
+            <div className="flex h-full flex-col justify-between rounded-2xl border border-border bg-card p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
+              <div className="space-y-3">
+                <div className="inline-flex w-fit items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                  {jobInfo.experiencelevel}
+                </div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  {jobInfo.jobTitle}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {truncateWords(jobInfo.description, 16)}
+                </p>
+              </div>
+              <div className="mt-4 flex items-center justify-between text-xs font-medium text-muted-foreground">
+                <span>{jobInfo.name}</span>
+                <span>Open</span>
+              </div>
             </div>
-            <p className=" text-xs mt-2">
-              {jobInfo.name} - {jobInfo.jobTitle} - {jobInfo.experiencelevel}
-            </p>
-          </div>
           </Link>
         ))}
-      </div>
+      </section>
     </div>
   );
 }
 
 function NoJobInfos() {
   return (
-    <div className="flex flex-col items-center justify-center h-full">
-      <h1 className="text-4xl font-bold mb-4">Welcome to ResumeStack</h1>
-      <p className="text-md">Set up your first Interview Environment</p>
-      <Card className="  flex my-6 items-center justify-center border-dashed border-2 border-gray-300 text-gray-500">
-        <CardContent>
-          <h3 className="mb-4 text-lg font-semibold">
-            Create your first Interview Environment
+    <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          Welcome to ResumeStack
+        </h1>
+        <p className="text-sm text-muted-foreground sm:text-base">
+          Set up your first interview environment to start tracking roles.
+        </p>
+      </div>
+      <Card className="w-full max-w-xl border-dashed border-border bg-card/60 text-muted-foreground">
+        <CardContent className="flex flex-col gap-4 p-6">
+          <h3 className="text-lg font-semibold text-foreground">
+            Create your first interview environment
           </h3>
           <Jobinfoform />
         </CardContent>

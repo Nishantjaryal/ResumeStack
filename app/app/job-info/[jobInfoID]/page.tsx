@@ -12,6 +12,7 @@ import { getJobInfoIdTag } from "@/features/JobInfos/dbCache";
 import { getCurrentUser } from "@/services/clerk/getCurrentUser";
 import { and, eq } from "drizzle-orm";
 import { cacheTag } from "next/cache";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -62,7 +63,7 @@ const JobInfoPage = async ({
       <div className="w-full max-w-6xl">
         <BackLink takeTo="/app" Text="App" />
 
-        <header className="mb-6">
+        <header className="mb-6 flex justify-around border rounded-lg bg-background ">
           <Card className="border-none shadow-none">
             <CardHeader>
               <CardTitle className="text-2xl">{jobInfo.jobTitle}</CardTitle>
@@ -71,9 +72,10 @@ const JobInfoPage = async ({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">{jobInfo.description}</p>
+              <p className="text-sm text-muted-foreground max-w-[500px]">{jobInfo.description}</p>
             </CardContent>
           </Card>
+          <Image src={"/1.png"} className="max-w-[350px]" width={500} height={100} alt=""/>
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

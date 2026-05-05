@@ -28,7 +28,7 @@ const CreateInterview = async ({
   }
 
   if(!await canCreateInterview()) {
-    return redirect("app/upgrade");
+    return redirect("/app/upgrade");
   }
 
   const jobInfo = await getJobInfo(jobInfoID, userId);

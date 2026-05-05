@@ -115,7 +115,7 @@ export function NewQuestionClientPage({
     <div className="flex flex-col items-center gap-4 w-full max-w-[2000px] mx-auto grow h-full">
       <div className="container flex gap-4 mt-4 items-center justify-between">
         <div className="grow basis-0">
-          <BackLink takeTo={`/app/job-info/${jobInfo.id}`} Text="Back" />
+          <BackLink takeTo={`/app/job-info/${jobInfo.id}`} Text="Job Info" />
             
         </div>
         <Controls
