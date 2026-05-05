@@ -70,11 +70,7 @@ const Home = () => {
           <div > <Image src={"/1.png"} alt="" width={500} height={500}  /></div>
 </div>
           <Card className="w-full">
-            <CardHeader className="space-y-1">
-              <CardTitle></CardTitle>
-              <CardDescription>
-              </CardDescription>
-            </CardHeader>
+            
             <CardContent>
             </CardContent>
           </Card>
